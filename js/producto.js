@@ -148,7 +148,8 @@ function verProducto(id){
                     '<li class="list-group-item">Categoria: '+producto.categoria+'</li>'+
                     '<li class="list-group-item">Descripcion: '+producto.descripcion+'</li>'+
                     '<li class="list-group-item">Imagen: '+producto.imagen+'</li>'+
-                    //'<li class="list-group-item">Registrado por: '+produc.usuario+'</li>'+
+                    '<li class="list-group-item">Registrado por: '+producto.user.firstName+'</li>'+
+
                     '</ul>';
             }
             document.getElementById("contentModal").innerHTML = cadena;
@@ -158,48 +159,37 @@ function verProducto(id){
         })
 }
 function verAgregarProducto(){
+    user();
     var cadena= '<form action="" method="post" id="myForm">'+
-        ' <label  for="titulo">Nombre</label>'+
-        '<input type="text" class="form-control" name="titulo" id="titulo" required> <br>'+
-        '<label  for="precio">Precio</label>'+
-        ' <input type="text" class="form-control" name="precio" id="precio" required><br>'+
-        '<label  for="categoria">Categoria</label>'+
-        ' <input type="text" class="form-control" name="categoria" id="categoria" required><br>'+
-        '<label  for="descripcion">Descripcion</label>'+
-        '  <input type="text" class="form-control" name="descripcion" id="descripcion" required><br>'+
-        '<label  for="imagen">Imagen</label>'+
-        '  <input type="text" class="form-control" name="imagen" id="imagen"  required><br>'+
+        ' <label  for="id">Id del producto</label>'+
+        '<input type="text" class="form-control" name="id" id="id" required> <br>'+
+        '<label  for="id_user">Usuario</label>'+
+        '<select class="form-control" id="id_user" name="id_user" required></select> <br>'+
         ' <button type="button" class="btn btn-success" onclick="sendData()">Registrar Producto</button>'+
         '</form>';
     document.getElementById("contentModal").innerHTML = cadena;
     var myModal = new bootstrap.Modal(document.getElementById('modalUsuario'))
     myModal.toggle();
 }
+
 async function sendData(){
     validaToken()
     var myForm = document.getElementById("myForm");
-    var titulo=document.getElementById("titulo").value;
-    var precio=document.getElementById("precio").value;
-    var categoria=document.getElementById("categoria").value;
-    var descripcion=document.getElementById("descripcion").value;
+    var id=document.getElementById("id").value;
+    var id_usu=document.getElementById("id_user");
     var formData = new FormData(myForm);
-
+    var id_usuario=id_usu.value;
     var jsonData = {};
-    if((titulo==="" || precio===""||categoria===""||descripcion==="")){
+    if((id==="")){
         alertas("¡Campos vacio!",2)
-    }else{
-        for(var [k, v] of formData){//convertimos los datos a json
-            jsonData[k] = v;
-        }
-        console.log(jsonData);
-        const request = await fetch(urlApi, {
+    }
+        const request = await fetch(urlApi+id+"/"+id_usuario, {
             method: 'POST',
             headers:{
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
                 'Authorization': localStorage.token
-            },
-            body: JSON.stringify(jsonData)
+            }
         });
         alertas(" Se ha registrado el producto exitosamente!",1)
         myForm.reset();
@@ -208,7 +198,7 @@ async function sendData(){
         var myModalEl = document.getElementById('modalUsuario');
         var modal = bootstrap.Modal.getInstance(myModalEl)
         modal.hide();
-    }
+
 }
 function alertas(mensaje,tipo){
     var color="";
@@ -236,4 +226,29 @@ function validaToken(){
     if(localStorage.token== undefined){
         salir();
     }
+}
+function user() {
+    validaToken();
+    var settings = {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.token
+        },
+    }
+    fetch("http://localhost:8080/user", settings)
+        .then(response => response.json())
+        .then(function (users) {
+            usuarios=users.data
+            var select = document.getElementById("id_user");
+
+            for(var i = 0; i < usuarios.length; i++) {
+                var opcion = document.createElement("option");
+                opcion.text = usuarios[i].id;
+                select.add(opcion);
+
+            }
+
+        })
 }
